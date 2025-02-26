@@ -75,3 +75,50 @@ func (r *Resp) Read() (Value, error) {
 		return Value{}, nil
 	}
 }
+
+func (r *Resp) readArray() (Value, error) {
+	v := Value{}
+	v.typ = "array"
+
+	// read length of array
+	len, _, err := r.readInteger()
+	if err != nil {
+		return v, err
+	}
+
+	// foreach line, parse and read the value
+	v.array = make([]Value, 0)
+	for i := 0; i < len; i++ {
+		val, err := r.Read()
+		if err != nil {
+			return v, err
+		}
+
+		// append parsed value to array
+		v.array = append(v.array, val)
+	}
+
+	return v, nil
+}
+
+func (r *Resp) readBulk() (Value, error) {
+	v := Value{}
+
+	v.typ = "bulk"
+
+	len, _, err := r.readInteger()
+	if err != nil {
+		return v, err
+	}
+
+	bulk := make([]byte, len)
+
+	r.reader.Read(bulk)
+
+	v.bulk = string(bulk)
+
+	// Read the trailing CRLF
+	r.readLine()
+
+	return v, nil
+}
