@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net"
-	"os"
 )
 
 func main() {
@@ -27,22 +25,17 @@ func main() {
 	defer conn.Close() // Ensures the connection closes properly when the function exits.
 	// Prevents memory leaks by cleaning up resources automatically.
 
-	for { // This creates an infinite loop, meaning the server will continuously read incoming messages from the client.
-		buf := make([]byte, 1024) // Creates a byte slice (buffer) of size 1024 bytes. It will store incoming message from client.
-
-		// read message from client
-		_, err = conn.Read(buf) // The underscore (_) ignores the number of bytes read because it’s not used in the logic.
+	for {
+		resp := NewResp(conn)
+		value, err := resp.Read()
 		if err != nil {
-			if err == io.EOF { // EOF (End of File): io.EOF: The client closed the connection, so we break the loop.
-				break
-			}
-			fmt.Println("error reading from client: ", err.Error())
-			os.Exit(1)
+			fmt.Println(err)
+			return
 		}
 
-		// No matter what message the client sends, the server always responds with +GoBolt says OK\r\n.
-		conn.Write([]byte("+GoBolt says OK\r\n"))
-		// This follows the Redis Simple String format, where a + prefix indicates a plain-text response.
-		//The \r\n (carriage return + newline) is required by the Redis protocol.
+		fmt.Println(value)
+
+		// ignore request and send back a PONG
+		conn.Write([]byte("+OK\r\n"))
 	}
 }
