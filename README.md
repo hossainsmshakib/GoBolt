@@ -75,7 +75,8 @@ graph TD;
 
 ## Screenshots
 
-![alt text](<Screenshot From 2025-03-03 15-59-17.png>)
+![Screenshot From 2025-03-03 15-59-17](https://github.com/user-attachments/assets/ffbe51b9-c530-4ef9-8f02-831c851f22e9)
+
 
 ---
 
