@@ -3,27 +3,47 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
 func main() {
-	fmt.Print("Listening on the port: 6379")
+	fmt.Println("Listening on port :6379")
 
-	// Crete a new server or TCP listener
-	l, err := net.Listen("tcp", ":6379") // l: This stores the TCP listener object (server socket).
-	if err != nil {
-		fmt.Print(err) // err: Stores any error encountered in net.Listen() or l.Accept().
-		return
-	}
-
-	// Listening for connection or Receiving request
-	conn, err := l.Accept() // conn: Stores the active client connection (TCP) once a client connects.
-	// l.Accept(): Waits for a client to connect to the server. When a client connects, it returns a connection object (conn).
+	// Create a new server
+	l, err := net.Listen("tcp", ":6379")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer conn.Close() // Ensures the connection closes properly when the function exits.
-	// Prevents memory leaks by cleaning up resources automatically.
+
+	aof, err := NewAof("database.aof")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer aof.Close()
+
+	aof.Read(func(value Value) {
+		command := strings.ToUpper(value.array[0].bulk)
+		args := value.array[1:]
+
+		handler, ok := Handlers[command]
+		if !ok {
+			fmt.Println("Invalid command: ", command)
+			return
+		}
+
+		handler(args)
+	})
+
+	// Listen for connections
+	conn, err := l.Accept()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer conn.Close()
 
 	for {
 		resp := NewResp(conn)
@@ -33,9 +53,33 @@ func main() {
 			return
 		}
 
-		_ = value
+		if value.typ != "array" {
+			fmt.Println("Invalid request, expected array")
+			continue
+		}
+
+		if len(value.array) == 0 {
+			fmt.Println("Invalid request, expected array length > 0")
+			continue
+		}
+
+		command := strings.ToUpper(value.array[0].bulk)
+		args := value.array[1:]
 
 		writer := NewWriter(conn)
-		writer.Write(Value{typ: "string", str: "OK"})
+
+		handler, ok := Handlers[command]
+		if !ok {
+			fmt.Println("Invalid command: ", command)
+			writer.Write(Value{typ: "string", str: ""})
+			continue
+		}
+
+		if command == "SET" || command == "HSET" {
+			aof.Write(value)
+		}
+
+		result := handler(args)
+		writer.Write(result)
 	}
 }
