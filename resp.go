@@ -123,7 +123,6 @@ func (r *Resp) readBulk() (Value, error) {
 	return v, nil
 }
 
-/ Marshal Value to bytes
 func (v Value) Marshal() []byte {
 	switch v.typ {
 	case "array":
