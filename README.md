@@ -25,19 +25,13 @@ GoBolt implements several core Redis features:
 # Clone the repository
 git clone https://github.com/hossainsmshakib/gobolt.git
 cd gobolt
-
-# Build the binary
-go build -o gobolt
-
-# Run the server
-./gobolt
 ```
 
 ---
 
 ## Usage
 
-You can interact with GoBolt using `redis-cli` or Telnet.
+You can interact with GoBolt using `redis-cli`.
 
 ### Example Commands
 ```sh
@@ -46,9 +40,6 @@ SET mykey "Hello GoBolt!"
 
 # Get the value of a key
 GET mykey
-
-# Delete a key
-DEL mykey
 ```
 
 ---
@@ -77,13 +68,6 @@ graph TD;
 
 ![Screenshot From 2025-03-03 15-59-17](https://github.com/user-attachments/assets/ffbe51b9-c530-4ef9-8f02-831c851f22e9)
 
-
----
-
-## Future Improvements
-- **Support for More Data Structures** (Lists, Hashes, Sets, etc.)
-- **Snapshot-based Persistence (RDB)**
-- **Replication & Clustering**
 
 ---
 
